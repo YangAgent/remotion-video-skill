@@ -220,7 +220,9 @@ SubAgent prompt 模板：
 2. 必须读取 {projectRoot}/storyboard.json 和 {projectRoot}/cartoon-ui-style-guide.css
 3. 产出文件必须写入 {projectRoot}/visual-strategy.md
 4. 你只制定策略，不写组件代码
-5. 完成后必须按参考协议中的“完成后返回”契约，返回结构化结果
+5. `visual-strategy.md` 采用“全局章节 + Scene Execution Cards”结构；每个 scene 只出现一次，不要在多个章节重复展开
+6. `beatPlan` 必须显式绑定 `segments` 和相对时间锚点（`anchorStartMs`，必要时 `anchorEndMs`），不要只写抽象顺序
+7. 完成后必须按参考协议中的“完成后返回”契约，返回结构化结果
 ```
 
 等待 `visual-strategy.md` 生成完成。
@@ -248,12 +250,14 @@ SubAgent prompt 模板：
 1. 所有路径都已展开为绝对路径，不要自行猜测
 2. 编码前先读取 {projectRoot}/visual-strategy.md
 3. 编码前必须先读取 {skillRoot}/../remotion-best-practices/SKILL.md
-4. 场景主节奏必须绑定 scenesData[].segments[].relativeStart
-5. 组件接口固定为 React.FC<{ segments: Segment[] }> 且使用默认导出
-6. 只负责产出 {projectRoot}/src/scenes/SceneXXX.tsx；若文件不存在则创建，若已存在则仅修改自己负责的场景文件
-7. 不要手改 {projectRoot}/src/compositions/Main.tsx 或 generated-scenes.ts
-8. 完成后必须按参考协议中的“完成后返回”契约，返回结构化结果
-9. `remotion-best-practices` 与当前 skill 同级，固定入口为 {skillRoot}/../remotion-best-practices/SKILL.md
+4. 重点读取每个 scene 对应执行卡中的 `surface`、`emphasis`、`layout`、`goal`、`beatPlan`、`screenShouldShow`
+5. 优先使用 `beatPlan` 中的 `segments`、`anchorStartMs`、`anchorEndMs` 做时间绑定，不要自行猜测 beat 对应哪句台词
+6. 场景主节奏必须绑定 scenesData[].segments[].relativeStart 或 beatPlan 显式锚点
+7. 组件接口固定为 React.FC<{ segments: Segment[] }> 且使用默认导出
+8. 只负责产出 {projectRoot}/src/scenes/SceneXXX.tsx；若文件不存在则创建，若已存在则仅修改自己负责的场景文件
+9. 不要手改 {projectRoot}/src/compositions/Main.tsx 或 generated-scenes.ts
+10. 完成后必须按参考协议中的“完成后返回”契约，返回结构化结果
+11. `remotion-best-practices` 与当前 skill 同级，固定入口为 {skillRoot}/../remotion-best-practices/SKILL.md
 ```
 
 #### 3.4 等待所有 Creator 完成

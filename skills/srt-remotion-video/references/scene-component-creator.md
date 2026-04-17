@@ -68,8 +68,9 @@
 
 ```text
 scene_xxx preflight
-- intent:
-- transformType:
+- goal:
+- beatPlan:
+- beatAnchors:
 - screenShouldShow:
 - visibleText:
 - originalTextRatio:
@@ -84,11 +85,19 @@ scene_xxx preflight
 优先使用以下字段：
 
 1. `surface`
-2. `emphasisLevel`
+2. `emphasis`
 3. `layout`
-4. `motion`
-5. `transformType`
+4. `goal`
+5. `beatPlan`
 6. `screenShouldShow`
+
+时间绑定要求：
+
+- `beatPlan` 中若提供 `segments`、`anchorStartMs`、`anchorEndMs`，优先使用这些锚点
+- 不要自己把多个 segment 私自合并成一个 beat 再推断起始时间
+- 如果 `beatPlan` 的时间锚点与 `scenesData[].segments` 不一致，以 `beatPlan` 中显式锚点为准
+- 如果 `beatPlan` 只写了 `segments` 未写时间，则用所绑定第一个 segment 的 `relativeStart`
+- 只有在 `beatPlan` 完全没有时间信息时，才允许基于 `segments[]` 做最小推断
 
 ### 2. 读取设计系统
 
@@ -113,6 +122,7 @@ scene_xxx preflight
 - 场景文件统一使用 `export default SceneXXX`
 - 从 `remotion` 导入并使用 `useCurrentFrame()`、`useVideoConfig()`
 - 使用 `segments[]` 中的 `relativeStart` / `relativeDuration` 计算元素出现帧
+- 若 `beatPlan` 提供显式时间锚点，先把它转成帧，再绑定动画
 - 不得只依赖固定延迟模板
 - 元素出现后通常保持可见，形成累积理解
 - 容器只做承托，不做场景唯一主角
