@@ -70,7 +70,7 @@
 scene_xxx preflight
 - goal:
 - beatPlan:
-- beatAnchors:
+- beatSegments:
 - screenShouldShow:
 - visibleText:
 - originalTextRatio:
@@ -93,11 +93,11 @@ scene_xxx preflight
 
 时间绑定要求：
 
-- `beatPlan` 中若提供 `segments`、`anchorStartMs`、`anchorEndMs`，优先使用这些锚点
+- `beatPlan` 中每个 beat 都必须提供 `segments`
 - 不要自己把多个 segment 私自合并成一个 beat 再推断起始时间
-- 如果 `beatPlan` 的时间锚点与 `scenesData[].segments` 不一致，以 `beatPlan` 中显式锚点为准
-- 如果 `beatPlan` 只写了 `segments` 未写时间，则用所绑定第一个 segment 的 `relativeStart`
-- 只有在 `beatPlan` 完全没有时间信息时，才允许基于 `segments[]` 做最小推断
+- 每个 beat 的开始时间，取所绑定第一个 segment 的 `relativeStart`
+- 每个 beat 的结束时间，取所绑定最后一个 segment 的 `relativeStart + relativeDuration`
+- 时间推导必须来自 `scenesData[].segments`，不要引入第二套锚点字段
 
 ### 2. 读取设计系统
 
@@ -122,7 +122,16 @@ scene_xxx preflight
 - 场景文件统一使用 `export default SceneXXX`
 - 从 `remotion` 导入并使用 `useCurrentFrame()`、`useVideoConfig()`
 - 使用 `segments[]` 中的 `relativeStart` / `relativeDuration` 计算元素出现帧
-- 若 `beatPlan` 提供显式时间锚点，先把它转成帧，再绑定动画
+- 依据 `beatPlan` 的 `segments` 绑定，把对应 segment 的时间换算成帧再绑定动画
+- 主视觉默认做大一档，主体和关键关系应明显占据画面主要可视区域，不要缩成谨慎的小图标或小卡片
+- 画面默认做满，建立足够的信息密度；在不增加长文案的前提下，用辅助图形、连接关系、背景承托把结构撑起来
+- 强化主次层级，中心主体、辅助元素、次要装饰的尺寸和权重应拉开，不要把所有元素做得同样轻、同样小、同样分散
+- 默认追求“海报感”而不是“局部组件感”；单个 scene 应先解决整屏视觉重心，再处理局部细节
+- 默认围绕画面中部区域组织主视觉，除非策略明确要求偏置构图
+- 优先先建立整屏构图区域，再在该区域内做局部 absolute 定位
+- 多元素场景优先围绕中心轴、中心舞台或成组区域展开，不要用一组偏小的固定 `left/top` 像素直接定义整场景主布局
+- 固定像素定位只用于局部微调，不应让主视觉像一个缩在角落里的小组件
+- 主体尺寸与占画面比例要足够支撑整屏观看，避免主要信息只占据一小块局部区域
 - 不得只依赖固定延迟模板
 - 元素出现后通常保持可见，形成累积理解
 - 容器只做承托，不做场景唯一主角

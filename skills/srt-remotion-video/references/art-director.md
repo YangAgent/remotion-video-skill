@@ -65,7 +65,7 @@
 - 在 `revealPlan` 中写“整句出现 / 逐字出现 / 原句停留”
 - 在 `screenShouldShow` 中把画面主体写成完整句子
 - 让卡片、便签、横幅承担整句台词，而不是承担结构化信息
-- 只写 beat 顺序，不写它绑定哪些 `segments` 和相对时间
+- 只写 beat 顺序，不写它绑定哪些 `segments`
 
 柔性红线：
 
@@ -142,10 +142,8 @@
 - `visualCore`：写主画面关系、视觉隐喻、信息承载物，不要把它写成一句台词
 - `surface`：只写当前 scene 主要依赖的容器或背景承托，不要堆太多候选
 - `emphasis`：写强调等级或主要强调手法，保持简洁
-- `beatPlan`：用简洁列表写清节奏推进、关键动作和最终停留，但必须保留时间锚点。每个 beat 至少写清：
+- `beatPlan`：用简洁列表写清节奏推进、关键动作和最终停留。每个 beat 至少写清：
   - 绑定哪些 `segments`
-  - `anchorStartMs`
-  - 如需明确停留或退场，再补 `anchorEndMs`
   - `action`
 - `screenShouldShow`：写观众最终看到的图形关系、标签体系、关键词锚点、构图重心；不要把它写成文案排版说明
 
@@ -153,18 +151,19 @@
 
 ```md
 - **beatPlan**:
-  - `segments: [0]` `anchorStartMs: 0` `action: ...`
-  - `segments: [1, 2]` `anchorStartMs: 900` `anchorEndMs: 4300` `action: ...`
-  - `segments: [3]` `anchorStartMs: 4667` `action: ...`
+  - `segments: [0]` `action: ...`
+  - `segments: [1, 2]` `action: ...`
+  - `segments: [3]` `action: ...`
 ```
 
 时间规则：
 
 - 不要只写 `beat 1 / beat 2 / beat 3`
-- 不要只写“先出现 / 再展开 / 最后停留”而没有时间锚点
+- 不要只写“先出现 / 再展开 / 最后停留”而没有 `segments` 绑定
 - 如果一个 beat 合并多个 `segments`，必须显式写出绑定的 `segments`
-- `anchorStartMs` 默认取所绑定第一个 segment 的 `relativeStart`
-- 下游 Creator 会优先使用这些 `anchorStartMs / anchorEndMs`，而不是自行猜测 beat 对应哪句台词
+- 该 beat 的起点取所绑定第一个 segment 的 `relativeStart`
+- 该 beat 的终点取所绑定最后一个 segment 的 `relativeStart + relativeDuration`
+- 下游 Creator 会依据这些 `segments` 绑定推导时序，而不是自行猜测 beat 对应哪句台词
 
 ## 完成后返回
 

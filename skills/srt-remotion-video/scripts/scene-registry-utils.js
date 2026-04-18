@@ -180,12 +180,33 @@ function validateSceneComponentExports(projectRoot, storyboard) {
 
 function analyzeSceneTimingUsage(content) {
   const normalized = content.replace(/\r\n/g, '\n');
+  const segmentAliasNames = new Set();
+  const segmentAccessorNames = new Set();
+
+  for (const pattern of [/\b(?:const|let|var)\s+(\w+)\s*=\s*segments\b/g]) {
+    let match;
+    while ((match = pattern.exec(normalized)) !== null) {
+      segmentAliasNames.add(match[1]);
+    }
+  }
+
+  for (const pattern of [
+    /\bconst\s+(\w+)\s*=\s*\([^)]*\)\s*=>\s*segments\s*\[[^\]]+\]/g,
+    /\b(?:let|var)\s+(\w+)\s*=\s*\([^)]*\)\s*=>\s*segments\s*\[[^\]]+\]/g,
+    /\bfunction\s+(\w+)\s*\([^)]*\)\s*\{\s*return\s+segments\s*\[[^\]]+\][\s\S]*?\}/g,
+  ]) {
+    let match;
+    while ((match = pattern.exec(normalized)) !== null) {
+      segmentAccessorNames.add(match[1]);
+    }
+  }
+
   const declaresSegmentsProp = /segments\??\s*:\s*Array<\{[\s\S]*?relativeStart[\s\S]*?\}>/.test(normalized)
     || /segments\??\s*:\s*Segment\[\]/.test(normalized)
     || /\(\{\s*segments\s*=/.test(normalized)
     || /\(\{\s*segments\s*\}\s*\)/.test(normalized);
 
-  const usesSegmentsCollection = [
+  const usesSegmentsCollectionPatterns = [
     /segments\.map\(/,
     /segments\.forEach\(/,
     /segments\.reduce\(/,
@@ -193,22 +214,20 @@ function analyzeSceneTimingUsage(content) {
     /segments\s*\[/,
     /for\s*\(\s*const\s+\w+\s+of\s+segments\s*\)/,
     /for\s*\(\s*let\s+\w+\s*=\s*0;\s*\w+\s*<\s*segments\.length/,
-  ].some((pattern) => pattern.test(normalized));
+  ];
+  const usesSegmentsCollection = usesSegmentsCollectionPatterns.some((pattern) => pattern.test(normalized))
+    || segmentAliasNames.size > 0
+    || segmentAccessorNames.size > 0;
 
-  const usesSegmentTiming = [
-    /\b\w+\.relativeStart/,
-    /\b\w+\.relativeDuration/,
-    /segments\[[^\]]+\]\.relativeStart/,
-    /segments\[[^\]]+\]\.relativeDuration/,
-    /relativeStart\s*\/\s*1000/,
-    /relativeDuration\s*\/\s*1000/,
-    /segmentStartFrames?/,
-    /segmentFrames?/,
-    /seg\d+Start/,
-    /seg\d+Duration/,
-  ].some((pattern) => pattern.test(normalized));
+  const suspiciousTimingPatterns = [
+    /\bconst\s+(?:beat|b\d+|phase\d+|seg\d+)\w*\s*=\s*(?:msToFrames?|framesFromMs)\(\s*\d{3,}\b/g,
+    /\bconst\s+(?:beat|b\d+|phase\d+|seg\d+)\w*(?:Ms|Start|End|Frame|Frames)\s*=\s*\d{3,}\b/g,
+    /\b(?:msToFrames?|framesFromMs)\(\s*\d{3,}\s*,/g,
+  ];
+  const suspiciousTimingMatches = suspiciousTimingPatterns.flatMap((pattern) => normalized.match(pattern) || []);
+  const hasSuspiciousHardcodedTiming = suspiciousTimingMatches.length > 0;
 
-  const usesLaterBeatEvidence = [
+  const usesLaterBeatEvidencePatterns = [
     /segments\s*\[\s*1\s*\]/,
     /segments\s*\[\s*2\s*\]/,
     /seg2Start/,
@@ -217,12 +236,18 @@ function analyzeSceneTimingUsage(content) {
     /segmentStartFrames?\s*\[\s*2\s*\]/,
     /segments\.map\(/,
     /for\s*\(\s*const\s+\w+\s+of\s+segments\s*\)/,
-  ].some((pattern) => pattern.test(normalized));
+  ];
+  const usesLaterBeatEvidence = usesLaterBeatEvidencePatterns.some((pattern) => pattern.test(normalized))
+    || Array.from(segmentAccessorNames).some((name) => {
+      const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return new RegExp(`\\b${escaped}\\s*\\(\\s*[12]\\s*\\)`).test(normalized);
+    });
 
   return {
     declaresSegmentsProp,
     usesSegmentsCollection,
-    usesSegmentTiming,
+    hasSuspiciousHardcodedTiming,
+    suspiciousTimingMatches,
     usesLaterBeatEvidence,
   };
 }
@@ -246,13 +271,16 @@ function validateSceneTimingAgainstStoryboard(projectRoot, storyboard) {
       continue;
     }
 
-    if (segmentCount > 1 && !analysis.usesSegmentTiming) {
-      errors.push(`场景 ${scene.id} 未从 segments 派生 relativeStart / relativeDuration 对应的时序拍点`);
+    if (segmentCount > 1 && analysis.hasSuspiciousHardcodedTiming) {
+      const sample = analysis.suspiciousTimingMatches[0]?.replace(/\s+/g, ' ').trim();
+      errors.push(
+        `场景 ${scene.id} 检测到疑似硬编码时序拍点` + (sample ? `（例如：${sample}）` : '')
+      );
       continue;
     }
 
-    if (segmentCount > 1 && !analysis.declaresSegmentsProp && analysis.usesSegmentTiming && !analysis.usesSegmentsCollection) {
-      warnings.push(`场景 ${scene.id} 使用旧式硬编码拍点变量，建议后续迁移为直接消费 segments`);
+    if (segmentCount > 1 && !analysis.declaresSegmentsProp && analysis.usesSegmentsCollection) {
+      warnings.push(`场景 ${scene.id} 可能通过中间变量间接消费 segments，建议检查是否显式按 beat 绑定使用 segments`);
     }
 
     if (segmentCount >= 3 && !analysis.usesLaterBeatEvidence) {
