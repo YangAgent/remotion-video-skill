@@ -182,11 +182,21 @@ function analyzeSceneTimingUsage(content) {
   const normalized = content.replace(/\r\n/g, '\n');
   const segmentAliasNames = new Set();
   const segmentAccessorNames = new Set();
+  const directSegmentIndexes = new Set();
 
   for (const pattern of [/\b(?:const|let|var)\s+(\w+)\s*=\s*segments\b/g]) {
     let match;
     while ((match = pattern.exec(normalized)) !== null) {
       segmentAliasNames.add(match[1]);
+    }
+  }
+
+  for (const pattern of [
+    /\bsegments\s*\[\s*(\d+)\s*\]/g,
+  ]) {
+    let match;
+    while ((match = pattern.exec(normalized)) !== null) {
+      directSegmentIndexes.add(Number(match[1]));
     }
   }
 
@@ -245,6 +255,7 @@ function analyzeSceneTimingUsage(content) {
 
   return {
     declaresSegmentsProp,
+    directSegmentIndexes: [...directSegmentIndexes].sort((a, b) => a - b),
     usesSegmentsCollection,
     hasSuspiciousHardcodedTiming,
     suspiciousTimingMatches,
@@ -285,6 +296,11 @@ function validateSceneTimingAgainstStoryboard(projectRoot, storyboard) {
 
     if (segmentCount >= 3 && !analysis.usesLaterBeatEvidence) {
       warnings.push(`场景 ${scene.id} 可能缺少后续拍点展开，建议检查是否把主要内容过早堆在前段`);
+    }
+
+    const outOfRangeSegmentIndex = analysis.directSegmentIndexes.find((index) => index >= segmentCount);
+    if (typeof outOfRangeSegmentIndex === 'number') {
+      errors.push(`场景 ${scene.id} 访问了越界的 segments[${outOfRangeSegmentIndex}]，当前仅有 ${segmentCount} 个 segments`);
     }
   }
 
