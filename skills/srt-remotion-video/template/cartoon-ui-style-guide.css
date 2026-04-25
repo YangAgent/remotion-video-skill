@@ -48,7 +48,7 @@
  * `cartoon-ui-style-guide-reference.md`
  *
  * 工作流阶段使用约束：
- * - 视觉策略阶段从本文件选择和编排资源
+ * - 场景规划阶段从本文件选择和编排资源
  * - 场景实现阶段从本文件提取实现所需定义
  * - 视觉规则以本文件为准
  */
@@ -81,6 +81,10 @@
   --deco-light-blue: #AED6F1;     /* 浅蓝色 - 柔和装饰 */
   --deco-gray: #BDC3C7;           /* 灰色 - 阴影、金属质感 */
   --deco-light-yellow: #FCF3CF;   /* 浅黄色 - 高亮背景 */
+  --surface-tint-cream: rgba(253, 246, 227, 0.78);
+  --surface-tint-warm: rgba(250, 243, 224, 0.88);
+  --surface-tint-paper: rgba(255, 254, 249, 0.72);
+  --surface-border-soft: rgba(44, 62, 80, 0.72);
 }
 
 
@@ -1264,6 +1268,12 @@
    10. 组件样式 (Components)
    ============================================ */
 
+/* 主体承托面规则
+ * - 大面积主容器不要使用纯白色实体底板作为唯一主体背景
+ * - 容器应优先与米黄色宿主背景融合，允许宿主底色和网格轻微透出
+ * - 只有小面积信息卡、标签、局部说明卡可以使用接近实色的纸白
+ */
+
 /**
  * 组件样式是完整的、可直接使用的 UI 组件
  * 与第 9 章的区别：
@@ -1334,22 +1344,31 @@
 
 /* ---- 纸张/便签效果 ---- */
 .paper-note {
-  background: var(--bg-paper);
-  border: var(--border-medium) solid var(--text-dark);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.1) 100%),
+    var(--pattern-lines-soft),
+    linear-gradient(135deg, var(--surface-tint-paper) 0%, var(--surface-tint-warm) 100%);
+  border: var(--border-medium) solid var(--surface-border-soft);
   border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
   padding: var(--space-md);
-  box-shadow: var(--shadow-md);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    var(--shadow-md);
   transform: rotate(-1deg);
   position: relative;
 }
 
 /* 纸张折角效果 */
 .paper-note-folded {
-  background: var(--bg-paper);
-  border: var(--border-medium) solid var(--text-dark);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0.08) 100%),
+    linear-gradient(135deg, var(--surface-tint-paper) 0%, var(--surface-tint-warm) 100%);
+  border: var(--border-medium) solid var(--surface-border-soft);
   border-radius: var(--radius-sm);
   padding: var(--space-md);
-  box-shadow: var(--shadow-md);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    var(--shadow-md);
   position: relative;
 }
 
@@ -1360,7 +1379,7 @@
   right: 0;
   width: 30px;
   height: 30px;
-  background: linear-gradient(135deg, var(--bg-cream) 50%, var(--deco-gray) 50%);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.16) 50%, rgba(189, 195, 199, 0.72) 50%);
   border-bottom-left-radius: var(--radius-sm);
 }
 
@@ -1519,8 +1538,10 @@
 /* ---- 气泡容器 ---- */
 /* 圆角矩形 + 底部三角尖角，适用于对话、引用、Agent 回复 */
 .speech-bubble {
-  background: var(--bg-paper);
-  border: var(--border-medium) solid var(--text-dark);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.26) 0%, rgba(255, 255, 255, 0.08) 100%),
+    linear-gradient(135deg, var(--surface-tint-paper) 0%, var(--surface-tint-warm) 100%);
+  border: var(--border-medium) solid var(--surface-border-soft);
   border-radius: var(--radius-lg);
   padding: var(--space-md);
   box-shadow: var(--shadow-md);
@@ -1548,7 +1569,7 @@
   width: 0;
   height: 0;
   border: 8px solid transparent;
-  border-top-color: var(--bg-paper);
+  border-top-color: rgba(255, 252, 244, 0.9);
   border-bottom: 0;
   z-index: 1;
   /* 内层三角，覆盖出白色填充 */
@@ -1573,9 +1594,18 @@
 /* ---- 手撕纸 ---- */
 /* 不规则撕裂边缘（clip-path），适用于列表、步骤、笔记片段 */
 .torn-paper {
-  background: var(--bg-paper);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.08) 100%),
+    var(--pattern-dots-light),
+    linear-gradient(135deg, var(--surface-tint-paper) 0%, var(--surface-tint-warm) 100%);
+  background-size:
+    auto,
+    var(--pattern-dots-light-size),
+    auto;
   padding: var(--space-md) var(--space-lg);
-  box-shadow: var(--shadow-md);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    var(--shadow-md);
   position: relative;
   clip-path: polygon(
     0% 2%, 3% 0%, 7% 3%, 11% 1%, 16% 2%, 20% 0%,
@@ -1614,11 +1644,14 @@
 /* ---- 白板区域 ---- */
 /* 虚线框 + 极浅色背景，适用于图解背景、分区 */
 .whiteboard-zone {
-  background: rgba(253, 246, 227, 0.5);
-  border: 2px dashed var(--text-medium);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%),
+    rgba(253, 246, 227, 0.46);
+  border: 2px dashed rgba(93, 109, 126, 0.88);
   border-radius: var(--radius-md);
   padding: var(--space-md);
   position: relative;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
 }
 
 .whiteboard-zone::before {
@@ -1635,8 +1668,10 @@
 /* ---- 索引卡片 ---- */
 /* 顶部彩色条 + 横线纹理，适用于定义、术语、知识点 */
 .index-card {
-  background: var(--bg-paper);
-  border: var(--border-thin) solid var(--text-dark);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0.08) 100%),
+    linear-gradient(135deg, rgba(255, 254, 249, 0.76) 0%, rgba(250, 243, 224, 0.92) 100%);
+  border: var(--border-thin) solid var(--surface-border-soft);
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-md);
   overflow: hidden;
@@ -1661,8 +1696,15 @@
 /* ---- 漫画分格 ---- */
 /* 粗黑边框(5px) + 白底，适用于步骤演示、故事、对比 */
 .comic-panel {
-  background: var(--bg-paper);
-  border: 5px solid var(--text-dark);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.04) 100%),
+    var(--pattern-grid-sm),
+    linear-gradient(135deg, rgba(255, 254, 249, 0.62) 0%, rgba(250, 243, 224, 0.9) 100%);
+  background-size:
+    auto,
+    var(--pattern-grid-sm-size),
+    auto;
+  border: 4px solid var(--surface-border-soft);
   border-radius: 2px;
   padding: var(--space-md);
   box-shadow: var(--shadow-lg);
