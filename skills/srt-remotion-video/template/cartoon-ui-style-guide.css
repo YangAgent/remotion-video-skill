@@ -59,7 +59,7 @@
 
 :root {
   /* ---- 主色调 (Primary Colors) ---- */
-  --primary-yellow: #F5B041;      /* 金黄色 - 用于强调、箭头、高亮 */
+  --primary-yellow: #F5B041;      /* 金黄色 - 用于强调、高亮、步骤编号 */
   --primary-green: #2D5A3D;       /* 墨绿色 - 用于黑板、标题背景 */
   --primary-blue: #5DADE2;        /* 天蓝色 - 用于图标、装饰元素 */
 
@@ -758,24 +758,12 @@
   /* 圆角虚线边框 */
   --border-dashed-rounded: url("data:image/svg+xml,%3Csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%25' height='100%25' fill='none' stroke='%232C3E50' stroke-width='3' stroke-dasharray='8 6' stroke-linecap='round' rx='12'/%3E%3C/svg%3E");
 
-  /* ---- 手绘连接箭头 (Connector Arrows) ---- */
-
-  /* 弯曲箭头 - 向右 */
-  --arrow-curved-right: url("data:image/svg+xml,%3Csvg width='60' height='30' viewBox='0 0 60 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5 15 Q30 5 50 15' stroke='%232C3E50' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3Cpath d='M45 10 L52 15 L45 20' stroke='%232C3E50' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-
-  /* 弯曲箭头 - 向下 */
-  --arrow-curved-down: url("data:image/svg+xml,%3Csvg width='30' height='60' viewBox='0 0 30 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M15 5 Q5 30 15 50' stroke='%232C3E50' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3Cpath d='M10 45 L15 52 L20 45' stroke='%232C3E50' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-
-  /* 直线箭头 - 向右 */
-  --arrow-straight-right: url("data:image/svg+xml,%3Csvg width='50' height='20' viewBox='0 0 50 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5 10 L40 10' stroke='%232C3E50' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3Cpath d='M35 5 L42 10 L35 15' stroke='%232C3E50' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-
   /* ---- 装饰符号 (Doodle Symbols) ---- */
   --deco-sparkle: '✦';
   --deco-star: '★';
   --deco-check: '✓';
   --deco-cross: '✗';
   --deco-bullet: '●';
-  --deco-arrow: '→';
 }
 
 /* ---- 纹理应用类 ---- */
@@ -870,7 +858,7 @@
  * - 一般强调：荧光笔下划线 (.underline-marker)
  * - 重点强调：波浪下划线 (.underline-wavy) + 轻微放大
  * - 最高强调：圈选 (.hand-circle) + 发光效果
- * - 流程强调：箭头 (.connector-arrow-*) + 编号
+ * - 流程强调：编号 + 色块分组 + 出现顺序
  * - 对比强调：红色删除线 (.underline-strikethrough) vs 绿色勾选
  */
 
@@ -982,46 +970,6 @@
 .hand-circle-glow::after {
   border-color: var(--accent-red);
   box-shadow: 0 0 12px rgba(231, 76, 60, 0.5);
-}
-
-/* ---- 手绘箭头 SVG 内联样式参考 ---- */
-
-/**
- * 箭头在 Remotion 中需要使用 SVG 内联实现，以下是样式参考值：
- *
- * 【弯曲箭头 - 向右】
- * path: "M5 15 Q30 5 50 15" (曲线部分)
- * arrowHead: "M45 10 L52 15 L45 20" (箭头头部)
- * stroke: var(--text-dark) = #2C3E50
- * strokeWidth: 3
- * fill: none
- * strokeLinecap: round
- * strokeLinejoin: round
- *
- * 【弯曲箭头 - 向下】
- * path: "M15 5 Q5 30 15 50"
- * arrowHead: "M10 45 L15 52 L20 45"
- *
- * 【直线箭头 - 向右】
- * path: "M5 10 L40 10"
- * arrowHead: "M35 5 L42 10 L35 15"
- *
- * 【手绘动画效果】
- * 使用 stroke-dasharray 和 stroke-dashoffset 实现绘制动画：
- * - strokeDasharray: 计算路径总长度
- * - strokeDashoffset: 从路径长度到 0 的动画
- */
-
-:root {
-  /* 箭头颜色变量 */
-  --arrow-color-default: var(--text-dark);
-  --arrow-color-emphasis: var(--accent-red);
-  --arrow-color-flow: var(--primary-blue);
-  --arrow-color-success: var(--primary-green);
-
-  /* 箭头尺寸 */
-  --arrow-stroke-width: 3px;
-  --arrow-stroke-width-thick: 4px;
 }
 
 /* ---- 勾选/叉号标记 ---- */
@@ -1161,35 +1109,6 @@
 .pill-tag-outline {
   background: transparent;
   border: var(--border-medium) solid currentColor;
-}
-
-/* ---- 连接箭头 (Connector Arrows) ---- */
-
-.connector-arrow-right {
-  display: inline-block;
-  width: 60px;
-  height: 30px;
-  background-image: var(--arrow-curved-right);
-  background-repeat: no-repeat;
-  background-position: center;
-}
-
-.connector-arrow-down {
-  display: inline-block;
-  width: 30px;
-  height: 60px;
-  background-image: var(--arrow-curved-down);
-  background-repeat: no-repeat;
-  background-position: center;
-}
-
-.connector-arrow-straight {
-  display: inline-block;
-  width: 50px;
-  height: 20px;
-  background-image: var(--arrow-straight-right);
-  background-repeat: no-repeat;
-  background-position: center;
 }
 
 /* ---- 勾选列表 (Checklist) ---- */
@@ -1412,33 +1331,6 @@
   box-shadow:
     inset 0 0 30px rgba(139, 105, 20, 0.1),
     var(--shadow-md);
-}
-
-/* ---- 箭头指示器 ---- */
-.arrow-indicator {
-  display: inline-flex;
-  align-items: center;
-  background: linear-gradient(
-    90deg,
-    var(--primary-yellow) 0%,
-    var(--accent-orange) 100%
-  );
-  border-radius: var(--radius-xl);
-  padding: var(--space-4) var(--space-8);
-  color: var(--text-dark);
-  font-weight: var(--weight-bold);
-  box-shadow: var(--shadow-md);
-  position: relative;
-}
-
-.arrow-indicator::after {
-  content: '';
-  position: absolute;
-  right: -20px;
-  top: 50%;
-  transform: translateY(-50%);
-  border: 15px solid transparent;
-  border-left-color: var(--accent-orange);
 }
 
 /* ---- 卡通按钮 ---- */
