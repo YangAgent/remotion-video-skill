@@ -262,6 +262,8 @@
   --max-width-text: 800px;
 
   /* ---- 视频尺寸 (Remotion 常用) ---- */
+  --scene-design-width: 1920px;
+  --scene-design-height: 1080px;
   --video-width-1080p: 1920px;
   --video-height-1080p: 1080px;
   --video-width-720p: 1280px;
@@ -509,7 +511,7 @@
   --phase-main: 2s;         /* 主要内容展示 */
   --phase-outro: 0.5s;      /* 退出阶段 */
 
-  /* ---- Remotion 帧率转换 (30fps) ---- */
+  /* ---- Remotion 帧率转换 (30fps default) ---- */
   --frames-instant: 3;      /* 0.1s = 3帧 */
   --frames-fast: 6;         /* 0.2s = 6帧 */
   --frames-normal: 12;      /* 0.4s = 12帧 */

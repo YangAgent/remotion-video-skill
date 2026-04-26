@@ -5,7 +5,9 @@ const path = require('path');
 
 const {
   buildGeneratedScenesSource,
+  getActiveVideoProfile,
   loadStoryboard,
+  loadVideoSettings,
   validateSceneComponentExports,
   validateSceneFilesAgainstStoryboard,
   validateSceneTimingAgainstStoryboard,
@@ -57,18 +59,22 @@ function main() {
       timingValidation.warnings.forEach((warning) => console.warn(`   - ${warning}`));
     }
 
-    const source = buildGeneratedScenesSource(storyboard);
+    const videoSettings = loadVideoSettings(projectRoot);
+    const activeProfile = getActiveVideoProfile(videoSettings);
+    const source = buildGeneratedScenesSource(storyboard, { videoSettings });
     fs.writeFileSync(outputPath, source, 'utf-8');
 
     console.log('✅ generated-scenes.ts 已生成');
     console.log(`   - 输出文件: ${outputPath}`);
     console.log(`   - 场景数量: ${storyboard.sceneCount}`);
+    console.log(`   - 输出规格: ${activeProfile.width}x${activeProfile.height} / ${activeProfile.fps}fps (${activeProfile.name})`);
     console.log('');
     console.log('__RESULT_JSON__');
     console.log(JSON.stringify({
       success: true,
       outputPath,
       sceneCount: storyboard.sceneCount,
+      videoProfile: activeProfile,
     }));
   } catch (error) {
     console.error(`❌ 错误: ${error.message}`);

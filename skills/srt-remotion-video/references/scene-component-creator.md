@@ -59,6 +59,17 @@
 6. 主体必须足够大、足够近
 7. 避免“组件感”
 
+## 设计画布规范
+
+所有场景组件统一按 `1920x1080` 设计画布实现。
+
+- 构图、绝对定位、SVG `viewBox`、路径坐标、装饰坐标都按 `1920x1080` 设计画布组织
+- 可以使用 `1920` / `1080` 作为设计坐标、SVG viewBox 或局部绘图坐标
+- 若使用 SVG，优先写 `viewBox="0 0 1920 1080"`，外层用 `width="100%" height="100%"`
+- `useVideoConfig()` 只用于读取 `fps` 做时间换算；不要用 Composition 的 `width` / `height` 推导布局
+- 禁止写死 `30fps`；时间换算必须使用 `useVideoConfig().fps`
+- 若需要画布常量，使用 `const DESIGN_WIDTH = 1920`、`const DESIGN_HEIGHT = 1080`
+
 ## 概念模型
 
 - `scenesData`
@@ -239,8 +250,10 @@ node "{validateScript}" \
 - 组件签名：`const SceneXXX: React.FC<{ segments: Segment[] }> = ({ segments }) => { ... }`
 - 场景文件统一使用 `export default SceneXXX`
 - 从 `remotion` 导入并使用 `useCurrentFrame()`、`useVideoConfig()`
+- 从 `useVideoConfig()` 中优先只读取 `fps`；布局不要依赖 Composition 的 `width` / `height`
 - 使用 `segments[]` 中的 `relativeStart` / `relativeDuration` 计算元素出现帧
 - 依据 `beatPlan` 的 `segments` 绑定，把对应 segment 的时间换算成帧再绑定动画
+- scene 的构图和固定坐标必须按 `1920x1080` 设计画布组织
 - 主视觉默认做大一档，主体和关键关系应明显占据画面主要可视区域
 - 画面默认做满，建立足够的信息密度；在不增加长文案的前提下，用辅助图形、连接关系、背景承托把结构撑起来
 - 强化主次层级，中心主体、辅助元素、次要装饰的尺寸和权重应拉开

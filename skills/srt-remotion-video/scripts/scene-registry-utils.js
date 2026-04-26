@@ -1,10 +1,56 @@
 const fs = require('fs');
 const path = require('path');
 
-const FPS = 30;
+const DEFAULT_VIDEO_SETTINGS = {
+  profile: '1080p30',
+  design: {
+    width: 1920,
+    height: 1080,
+  },
+  profiles: {
+    '1080p30': {
+      width: 1920,
+      height: 1080,
+      fps: 30,
+    },
+    '4k60': {
+      width: 3840,
+      height: 2160,
+      fps: 60,
+    },
+  },
+};
 
-function msToFrames(ms) {
-  return Math.round((ms / 1000) * FPS);
+function getActiveVideoProfile(videoSettings = DEFAULT_VIDEO_SETTINGS) {
+  const profileName = videoSettings.profile;
+  const profile = videoSettings.profiles && videoSettings.profiles[profileName];
+  if (!profile) {
+    throw new Error(`未知视频输出配置: ${profileName}`);
+  }
+
+  return {
+    name: profileName,
+    width: profile.width,
+    height: profile.height,
+    fps: profile.fps,
+  };
+}
+
+function loadVideoSettings(projectRoot) {
+  if (!projectRoot) {
+    return DEFAULT_VIDEO_SETTINGS;
+  }
+
+  const settingsPath = path.join(projectRoot, 'src', 'video-settings.json');
+  if (!fs.existsSync(settingsPath)) {
+    return DEFAULT_VIDEO_SETTINGS;
+  }
+
+  return JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+}
+
+function msToFrames(ms, fps = getActiveVideoProfile().fps) {
+  return Math.round((ms / 1000) * fps);
 }
 
 function sceneIdToNumber(sceneId) {
@@ -311,7 +357,8 @@ function validateSceneTimingAgainstStoryboard(projectRoot, storyboard) {
   };
 }
 
-function buildGeneratedScenesSource(storyboard) {
+function buildGeneratedScenesSource(storyboard, options = {}) {
+  const fps = options.fps || getActiveVideoProfile(options.videoSettings).fps;
   const imports = storyboard.scenes
     .map((scene) => {
       const componentName = sceneIdToComponentName(scene.id);
@@ -351,17 +398,19 @@ export const generatedScenes: GeneratedSceneItem[] = [
 ${sceneEntries}
 ];
 
-export const totalDurationInFrames = ${msToFrames(storyboard.totalDuration)};
+export const totalDurationInFrames = ${msToFrames(storyboard.totalDuration, fps)};
 `;
 }
 
 module.exports = {
   analyzeSceneTimingUsage,
-  FPS,
+  DEFAULT_VIDEO_SETTINGS,
   buildGeneratedScenesSource,
+  getActiveVideoProfile,
   getScenesDir,
   listSceneComponentFiles,
   loadStoryboard,
+  loadVideoSettings,
   msToFrames,
   sceneIdToComponentName,
   sceneIdToFilename,

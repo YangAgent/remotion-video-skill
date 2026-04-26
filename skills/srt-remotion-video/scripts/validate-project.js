@@ -5,7 +5,9 @@ const path = require('path');
 
 const {
   buildGeneratedScenesSource,
+  getActiveVideoProfile,
   loadStoryboard,
+  loadVideoSettings,
   validateSceneComponentExports,
   validateSceneFilesAgainstStoryboard,
   validateSceneTimingAgainstStoryboard,
@@ -57,7 +59,7 @@ function validateMain(mainPath) {
   };
 }
 
-function validateRegistry(registryPath, storyboard) {
+function validateRegistry(registryPath, storyboard, videoSettings) {
   const errors = [];
   if (!fs.existsSync(registryPath)) {
     errors.push(`缺少 generated-scenes.ts: ${registryPath}`);
@@ -65,7 +67,7 @@ function validateRegistry(registryPath, storyboard) {
   }
 
   const actual = fs.readFileSync(registryPath, 'utf-8').trim();
-  const expected = buildGeneratedScenesSource(storyboard).trim();
+  const expected = buildGeneratedScenesSource(storyboard, { videoSettings }).trim();
   if (actual !== expected) {
     errors.push('generated-scenes.ts 与 storyboard.json / 场景文件不一致');
   }
@@ -90,12 +92,14 @@ function main() {
 
   try {
     const storyboard = loadStoryboard(storyboardPath);
+    const videoSettings = loadVideoSettings(projectRoot);
+    const activeProfile = getActiveVideoProfile(videoSettings);
     const validations = [
       validateStoryboardStructure(storyboard),
       validateSceneFilesAgainstStoryboard(projectRoot, storyboard),
       validateSceneComponentExports(projectRoot, storyboard),
       validateSceneTimingAgainstStoryboard(projectRoot, storyboard),
-      validateRegistry(registryPath, storyboard),
+      validateRegistry(registryPath, storyboard, videoSettings),
       validateRoot(rootPath),
       validateMain(mainPath),
     ];
@@ -117,6 +121,7 @@ function main() {
     console.log(`   - projectRoot: ${projectRoot}`);
     console.log(`   - storyboard: ${storyboardPath}`);
     console.log(`   - sceneCount: ${storyboard.sceneCount}`);
+    console.log(`   - videoProfile: ${activeProfile.width}x${activeProfile.height} / ${activeProfile.fps}fps (${activeProfile.name})`);
     console.log('');
     console.log('__RESULT_JSON__');
     console.log(JSON.stringify({
@@ -124,6 +129,7 @@ function main() {
       projectRoot,
       storyboardPath,
       sceneCount: storyboard.sceneCount,
+      videoProfile: activeProfile,
     }));
   } catch (error) {
     console.error(`❌ 错误: ${error.message}`);

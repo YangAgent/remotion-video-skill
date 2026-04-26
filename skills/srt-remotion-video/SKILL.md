@@ -250,6 +250,11 @@ node "{scriptsRoot}/generate-creator-scenes.js" \
 
 普通视频生成流程不得重写 `{projectRoot}/src/compositions/Main.tsx`。
 
+模板默认输出规格：`1920x1080 / 30fps`。
+
+- `generated-scenes.ts` 的 `totalDurationInFrames` 由 `generate-scenes-registry.js` 生成，不要手改
+- `Main.tsx` 中的 `msToFrames` 必须使用 `useVideoConfig().fps` 动态获取帧率，不能硬编码 `FPS` 常量
+
 执行：
 
 ```bash
@@ -374,6 +379,85 @@ npx remotion render Main out/output.mp4
 
 通知用户视频已重新渲染，输出路径为 `{projectRoot}/out/output.mp4`。
 
+## 高分辨率 / 高帧率渲染
+
+当主视频生成流程已经完成，用户要求生成 4K、60fps 或其他高于默认配置（1080p 30fps）的版本时执行。
+
+> 这个操作假定 `projectRoot` 已存在且场景组件已生成完毕。
+
+### 关键原则：设计分辨率与输出分辨率分离
+
+场景组件中的所有元素（卡片、图标、文字等）使用**绝对像素值**，基于 1920x1080 设计。**直接将 Root.tsx 的 width/height 改为 3840x2160 会导致所有元素在画面中占比缩小**。正确做法是**保持设计分辨率 1920x1080 不变**，通过 Remotion 的 `--scale` 参数放大输出分辨率。
+
+### 常见错误（禁止使用）
+
+| 错误做法 | 后果 |
+|---------|------|
+| 改 Root.tsx 的 width=3840 height=2160 | 所有场景元素占比缩小一半 |
+| 用 `--width 3840 --height 2160` CLI 参数 | 同上 |
+| 只改 fps 不改 totalDurationInFrames | 视频只有前半段有内容，后半段空白 |
+| Main.tsx 中硬编码 `const FPS = 30` | 改了 Root.tsx fps 后场景时序错乱 |
+
+### HR.0 确认用户需求
+
+解析用户需求为具体的输出参数：
+
+| 用户需求 | Root.tsx 修改 | generated-scenes.ts 修改 | 渲染命令 |
+|---------|-------------|------------------------|---------|
+| 4K / 超清 | 不改 | 不改 | `--scale 2` |
+| 60fps | `fps={60}` | `totalDurationInFrames` 按比例换算 | 无需 scale |
+| 4K 60fps | `fps={60}` | `totalDurationInFrames` 按比例换算 | `--scale 2` |
+
+### HR.1 修改帧率（仅当用户要求高帧率时）
+
+1. 修改 `{projectRoot}/src/Root.tsx` 中的 `fps` 值：
+
+```typescript
+fps={60}  // 从 30 改为 60
+```
+
+2. 修改 `{projectRoot}/src/compositions/generated-scenes.ts` 中的 `totalDurationInFrames`：
+
+```typescript
+// 帧数 = 原帧数 × (新fps / 原fps)
+// 例如 30→60fps: 1572 × 2 = 3144
+export const totalDurationInFrames = {原帧数 × 新fps / 原fps};
+```
+
+**关键**：`{projectRoot}/src/Root.tsx` 中 `<Composition>` 的 `width` 和 `height` **不要修改**，必须保持 `1920` 和 `1080`。分辨率放大由渲染时的 `--scale` 参数完成，而非修改设计分辨率。
+
+> `Main.tsx` 中的 `msToFrames` 必须使用 `useVideoConfig().fps` 动态获取帧率。如果发现 `Main.tsx` 中有硬编码的 `FPS` 常量，必须先修复为 `useVideoConfig().fps`，否则 fps 变更后场景时序会完全错乱。
+
+### HR.2 校验项目
+
+```bash
+node "{scriptsRoot}/validate-project.js" \
+  "{projectRoot}" \
+  "{projectRoot}/storyboard.json"
+```
+
+校验失败时必须停止，不得继续渲染。
+
+### HR.3 执行渲染
+
+```bash
+cd "{projectRoot}"
+npx remotion render Main out/output-4k.mp4 --scale 2
+```
+
+- `--scale 2`：将 1920x1080 的设计画布放大 2 倍渲染为 3840x2160
+- 矢量元素（文字、SVG）会以更高分辨率渲染，画质更清晰
+- 画面布局与 1080p 完全一致，不存在元素缩小的问题
+- 如果不需要 4K 只需 60fps，去掉 `--scale 2` 即可
+
+### HR.4 完成通知
+
+通知用户：
+
+- 输出路径: `{projectRoot}/out/output-4k.mp4`
+- 输出分辨率、帧率、时长
+- 如有 fps 修改，提醒用户 Root.tsx 中的 fps 已从 30 改为目标值
+
 ## 数据结构参考
 
 ### storyboard.json
@@ -477,6 +561,15 @@ interface SceneComponentResult {
 - [ ] 检查 `Main.tsx` 是否存在 `<Audio>` 标签
 - [ ] 若存在则移除 `<Audio>` 及相关 import
 - [ ] 执行渲染
+
+### 高分辨率 / 高帧率渲染
+
+- [ ] 解析用户需求为具体的输出分辨率、帧率和 scale 值
+- [ ] 确认 `Main.tsx` 中 `msToFrames` 使用 `useVideoConfig().fps` 而非硬编码常量
+- [ ] 仅当需要高帧率时：修改 `Root.tsx` 的 `fps` 和 `generated-scenes.ts` 的 `totalDurationInFrames`
+- [ ] 确认 `Root.tsx` 的 `width`/`height` 保持 1920/1080 不变
+- [ ] 运行 `validate-project.js` 校验
+- [ ] 使用 `--scale 2`（4K时）执行渲染
 
 ## 注意事项
 
