@@ -23,7 +23,9 @@ export const designTokens = {
 
 export const hostDecor = {
   gridSize: "20px 20px",
+  gridSizePx: 20,
   gridOpacity: 0.15,
+  gridScrollSpeed: 18,
   sparkles: [
     { top: 75, left: 160, fontSize: 14, phase: 0, base: 0.5, amp: 0.3, speed: 0.11 },
     { top: 50, right: 200, fontSize: 10, phase: 0.5, base: 0.4, amp: 0.3, speed: 0.13 },

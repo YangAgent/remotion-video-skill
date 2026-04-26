@@ -9,6 +9,7 @@ const msToFrames = (ms: number) => Math.round((ms / 1000) * videoConfig.fps);
 
 export const Main: React.FC = () => {
   const frame = useCurrentFrame();
+  const gridOffset = ((frame * hostDecor.gridScrollSpeed) / videoConfig.fps) % hostDecor.gridSizePx;
 
   return (
     <AbsoluteFill style={{ backgroundColor: designTokens.background.host, overflow: "hidden" }}>
@@ -25,6 +26,7 @@ export const Main: React.FC = () => {
           style={{
             backgroundImage: `linear-gradient(${designTokens.background.grid} 1px, transparent 1px), linear-gradient(90deg, ${designTokens.background.grid} 1px, transparent 1px)`,
             backgroundSize: hostDecor.gridSize,
+            backgroundPosition: `${gridOffset}px ${gridOffset}px`,
             opacity: hostDecor.gridOpacity,
           }}
         />
