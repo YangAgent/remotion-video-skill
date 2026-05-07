@@ -14,7 +14,7 @@ export const designTokens = {
   background: {
     host: "#FDF6E3",
     paper: "#FFFEF9",
-    grid: "#BDC3C7",
+    grid: "#9EA7AD",
   },
   accent: {
     primary: "#F5B041",
@@ -24,7 +24,7 @@ export const designTokens = {
 export const hostDecor = {
   gridSize: "20px 20px",
   gridSizePx: 20,
-  gridOpacity: 0.15,
+  gridOpacity: 0.28,
   gridScrollSpeed: 18,
   sparkles: [
     { top: 75, left: 160, fontSize: 14, phase: 0, base: 0.5, amp: 0.3, speed: 0.11 },

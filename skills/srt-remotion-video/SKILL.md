@@ -306,15 +306,15 @@ npx remotion render Main out/output.mp4
 - 场景数量: N
 - 视频时长: X 秒
 
-## 测试模式与重新渲染
+## 调试模式与重新渲染
 
-当主视频生成流程（步骤 0–5）完成后，用户可以请求"测试模式"或"重新渲染"。
+当主视频生成流程（步骤 0–5）完成后，用户可以请求"调试模式"或"重新渲染"。
 
 > 这两个操作都假定 `projectRoot` 已存在且场景组件已生成完毕。
 
-### 测试模式
+### 调试模式
 
-当用户说"测试模式"、"预览模式"或类似表述，并要求添加音频时执行。
+当用户说"调试模式"、"预览模式"或类似表述，并要求添加音频时执行。
 
 #### TM.0 获取音频文件
 
@@ -521,6 +521,7 @@ interface SceneComponentResult {
 
 - `storyboard-parser.md`：分镜生成阶段协议
 - `scene-component-creator.md`：场景规划与实现阶段协议
+- `theme-template-switching.md`：主题模板更换指南
 
 ### scripts/
 
@@ -549,7 +550,7 @@ interface SceneComponentResult {
 - [ ] 运行 `validate-project.js`
 - [ ] 执行渲染
 
-### 测试模式
+### 调试模式
 
 - [ ] 获取用户提供的音频文件绝对路径
 - [ ] 复制音频到 `{projectRoot}/public/audio.mp3`
@@ -581,3 +582,4 @@ interface SceneComponentResult {
 6. `Main.tsx`、`Root.tsx` 属于受保护宿主层
 7. 场景组件必须真实消费 `segments`
 8. `validate-project.js` 失败时不得继续渲染
+9. 如果用户想更换主题模板，必须先参考 `references/theme-template-switching.md`

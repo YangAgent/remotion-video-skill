@@ -24,7 +24,7 @@ export const Main: React.FC = () => {
       >
         <AbsoluteFill
           style={{
-            backgroundImage: `linear-gradient(${designTokens.background.grid} 1px, transparent 1px), linear-gradient(90deg, ${designTokens.background.grid} 1px, transparent 1px)`,
+            backgroundImage: `linear-gradient(${designTokens.background.grid} 1.5px, transparent 1.5px), linear-gradient(90deg, ${designTokens.background.grid} 1.5px, transparent 1.5px)`,
             backgroundSize: hostDecor.gridSize,
             backgroundPosition: `${gridOffset}px ${gridOffset}px`,
             opacity: hostDecor.gridOpacity,

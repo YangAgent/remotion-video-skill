@@ -228,7 +228,40 @@ node "{validateScript}" \
 - 每个 beat 的结束时间，取所绑定最后一个 segment 的 `relativeStart + relativeDuration`
 - 不要自己发明第二套时间锚点
 
-### 3. 读取设计系统
+### 3. 动画时长约束
+
+字幕时间用于决定视觉事件的锚点和可见区间，不等于元素入场动画的持续时间。
+
+- 元素入场、点亮、展开、位移、缩放、淡入等动作必须使用短动画窗口
+- 常规入场动画建议控制在 `8-18` 帧，复杂主视觉展开可放宽到 `18-30` 帧
+- 不得把整个 beat 的 `[start, end]` 直接作为单个元素从 0 到 1 的入场进度区间
+- 当一个 beat 覆盖多个 segments 时，每个关键元素应优先绑定到对应 segment 的 `relativeStart`，分别快速入场或点亮
+- beat 的 `end` 可用于决定元素保持到何时、何时进入下一状态，但不应用作默认入场动画结束点
+- 如果需要错峰，使用固定帧偏移，例如 `+6`、`+10`、`+14` 帧，而不是用长 beat progress 的百分比慢慢推迟
+- `interpolate(frame, [beatStart, beatEnd], [0, 1])` 只适合表示贯穿整段字幕的持续性变化，例如进度条读数、时间轴推进、背景扫描或能量累积；不适合普通卡片、标题、图标、标签的出现动画
+
+推荐写法：
+
+```typescript
+const enterFrames = 12;
+const firstStart = msToFrame(segments[2].relativeStart, fps);
+const secondStart = msToFrame(segments[3].relativeStart, fps);
+
+const firstEnter = reveal(frame, firstStart, firstStart + enterFrames);
+const secondEnter = reveal(frame, secondStart, secondStart + enterFrames);
+```
+
+避免写法：
+
+```typescript
+const beatProgress = reveal(frame, beatStart, beatEnd);
+const firstEnter = beatProgress;
+const secondEnter = Math.max(0, beatProgress - 0.28) / 0.72;
+```
+
+这种写法会把元素入场拉满整段字幕，导致卡片、标题或图标像慢动作一样出现。
+
+### 4. 读取设计系统
 
 只提取当前实现需要的：
 
@@ -239,7 +272,7 @@ node "{validateScript}" \
 - 宿主与背景规则
 - 已安装的图标资源
 
-### 4. 组件实现
+### 5. 组件实现
 
 组件文件路径：
 
@@ -252,7 +285,7 @@ node "{validateScript}" \
 - 从 `remotion` 导入并使用 `useCurrentFrame()`、`useVideoConfig()`
 - 从 `useVideoConfig()` 中优先只读取 `fps`；布局不要依赖 Composition 的 `width` / `height`
 - 使用 `segments[]` 中的 `relativeStart` / `relativeDuration` 计算元素出现帧
-- 依据 `beatPlan` 的 `segments` 绑定，把对应 segment 的时间换算成帧再绑定动画
+- 依据 `beatPlan` 的 `segments` 绑定，把对应 segment 的开始时间换算成帧作为视觉事件锚点；普通入场动画必须使用短固定窗口，不得默认拉满整个 beat
 - scene 的构图和固定坐标必须按 `1920x1080` 设计画布组织
 - 主视觉默认做大一档，主体和关键关系应明显占据画面主要可视区域
 - 画面默认做满，建立足够的信息密度；在不增加长文案的前提下，优先用空间分组、编号、色块、背景承托、图标状态和节奏动画等把结构撑起来
@@ -269,7 +302,7 @@ node "{validateScript}" \
 - 需要图标或符号时，先尝试从 `lucide-react` 选择合适图标
 - 若 `lucide-react` 不适配当前语义或风格，再使用内联 SVG 实现
 
-### 5. 宿主层边界
+### 6. 宿主层边界
 
 - 场景组件最外层 `<AbsoluteFill>` 必须保持透明
 - 不得重建或覆盖整屏宿主背景
